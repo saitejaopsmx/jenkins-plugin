@@ -49,11 +49,13 @@ fi
 echo "Extracted Directory: $extracted_dir"
 
 # Change to the extracted directory
+# cd "$extracted_dir" || { echo "Error: Cannot change to directory '$extracted_dir'."; exit 1; }
 
-# Check for version.txt and determine ArtifactTag
-if [ -f "version.txt" ]; then
-    # Read the contents of version.txt
-    artifact_tag=$(<version.txt)
+# Check for package_manifest.ini and determine ArtifactTag
+manifest_path=$(find . -type f -name "package_manifest.ini" | head -n 1 || true)
+if [ -f "$manifest_path" ]; then
+    # Read package_version from package_manifest.ini
+    artifact_tag=$(grep '^package_version=' "$manifest_path" | cut -d'=' -f2 | xargs)
 else
     # Extract the base name before the first .tar
     artifact_tag=$(basename "$tar_file" .tar.gz | sed 's/\(.*\)\.tar.*/\1/')
@@ -61,7 +63,7 @@ fi
 
 # Inform the user about the search criteria
 if [ -z "$include_regex" ]; then
-    echo "No include regex provided. Including all files except 'version.txt'."
+    echo "No include regex provided. Including all files except 'package_manifest.ini'."
 else
     echo "Searching for binaries that match include regex: '$include_regex'."
 fi
@@ -77,10 +79,10 @@ find_command="find . -type f -regextype posix-extended"
 
 if [ -z "$include_regex" ]; then
     # If no include regex is provided, include all files except 'version.txt'
-    find_command="$find_command ! -name 'version.txt'"
+    find_command="$find_command ! -name 'package_manifest.ini'"
 else
     # Include files based on the include regex
-    find_command="$find_command -regex \".*($include_regex).*\" ! -name 'version.txt'"
+    find_command="$find_command -regex \".*($include_regex).*\" ! -name 'package_manifest.ini'"
 fi
 
 # Exclude files based on the exclude regex, if provided
@@ -119,6 +121,7 @@ EOF
 cd ..
 
 # Define the output JSON file path (placed one level up from the extracted directory)
+# output_json=$WORKSPACE+"/ssd.json"
 output_json="${WORKSPACE:-.}/ssd.json"
 
 
