@@ -29,6 +29,10 @@ if [[ ! -f "$tar_file" || "${tar_file##*.}" != "gz" ]]; then
     exit 1
 fi
 
+# cd into a tmp dir
+mkdir ssd-tmp
+cd ssd-tmp
+
 # Extract the tar.gz file
 echo "Extracting '$tar_file'..."
 tar -xzf "$tar_file"
@@ -45,7 +49,6 @@ fi
 echo "Extracted Directory: $extracted_dir"
 
 # Change to the extracted directory
-cd "$extracted_dir" || { echo "Error: Cannot change to directory '$extracted_dir'."; exit 1; }
 
 # Check for version.txt and determine ArtifactTag
 if [ -f "version.txt" ]; then
@@ -116,7 +119,8 @@ EOF
 cd ..
 
 # Define the output JSON file path (placed one level up from the extracted directory)
-output_json="ssd.json"
+output_json="${WORKSPACE:-.}/ssd.json"
+
 
 # Write the JSON output to the file
 echo -e "$json_output" > "$output_json"
